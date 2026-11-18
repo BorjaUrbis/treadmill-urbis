@@ -13,7 +13,7 @@ import { SessionForm } from './SessionForm';
 import { Button, Card, H1, Label } from './ui';
 import { C, GRAD } from './theme';
 
-type Mode = 'voice' | 'text' | 'photo';
+export type Mode = 'voice' | 'text' | 'photo';
 
 const emptyDraft = (): SessionDraft => ({
   date: todayISO(),
@@ -27,9 +27,9 @@ const emptyDraft = (): SessionDraft => ({
   notes: '',
 });
 
-export function RecordScreen({ onSaved }: { onSaved: () => void }) {
+export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () => void; initialMode?: Mode }) {
   const { apiKey, addSessions } = useStore();
-  const [mode, setMode] = useState<Mode>('voice');
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [listening, setListening] = useState(false);
   const [finalText, setFinalText] = useState('');
   const [interim, setInterim] = useState('');
@@ -85,6 +85,12 @@ export function RecordScreen({ onSaved }: { onSaved: () => void }) {
       androidIntentOptions: { EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 4000 },
     });
   };
+
+  // Si se abre desde el menú + en modo voz, empezamos a escuchar directamente
+  useEffect(() => {
+    if (initialMode === 'voice') toggleMic();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pickPhoto = async (source: 'camera' | 'library') => {
     try {
