@@ -1,0 +1,44 @@
+import { Session } from './types';
+
+/** Sesiones registradas antes de tener la app (vienen del Excel inicial). */
+export const SEED_SESSIONS: Session[] = [
+  {
+    id: 'seed-1',
+    date: '2026-11-17',
+    endTime: '19:00',
+    minutes: 60,
+    speedKmh: 4,
+    distanceKm: 4,
+    kcalScreen: null,
+    barefoot: true,
+    loadKg: 0,
+    notes: 'Velocidad variable, media aprox. 4 km/h',
+    createdAt: 1,
+  },
+  {
+    id: 'seed-2',
+    date: '2026-11-17',
+    endTime: '20:20',
+    minutes: 80,
+    speedKmh: 3,
+    distanceKm: 4,
+    kcalScreen: null,
+    barefoot: true,
+    loadKg: 22,
+    notes: 'Mochila 22 kg',
+    createdAt: 2,
+  },
+  {
+    id: 'seed-3',
+    date: '2026-11-18',
+    endTime: null,
+    minutes: 98,
+    speedKmh: 3,
+    distanceKm: 4.9,
+    kcalScreen: null,
+    barefoot: true,
+    loadKg: 0,
+    notes: 'Con una pausa. La cinta se reinició a mitad (marcó 146 kcal parciales)',
+    createdAt: 3,
+  },
+];
