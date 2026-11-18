@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Constants from 'expo-constants';
+import * as Clipboard from 'expo-clipboard';
+import { APPS_SCRIPT_CODE } from '../lib/appsScript';
+import { ago } from './SyncBadge';
 import { useStore } from '../lib/store';
 import { exportExcel } from '../lib/exportExcel';
 import { sendTestNotification, setupNotifications } from '../lib/notifications';
@@ -10,7 +13,8 @@ import { C } from './theme';
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function SettingsScreen() {
-  const { settings, updateSettings, sessions, apiKey, setApiKey } = useStore();
+  const { settings, updateSettings, sessions, apiKey, setApiKey, sync, syncNow } = useStore();
+  const [url, setUrl] = useState(settings.sheetsUrl);
   const [keyDraft, setKeyDraft] = useState('');
   const [w, setW] = useState(String(settings.bodyWeightKg).replace('.', ','));
   const [inc, setInc] = useState(String(settings.inclinePct).replace('.', ','));
@@ -90,8 +94,66 @@ export function SettingsScreen() {
       </Card>
 
       <Card>
+        <Label>Google Sheets (base de datos)</Label>
+        {settings.sheetsUrl ? (
+          <>
+            <Text style={s.p}>
+              {sync.status === 'error'
+                ? `⚠️ ${sync.message}`
+                : sync.status === 'syncing'
+                  ? '🔄 Sincronizando...'
+                  : `✅ Conectado. Última sincronización: ${ago(sync.last)}.`}
+            </Text>
+            <Text style={s.note}>Se sincroniza solo al abrir la app y cada vez que cambias algo. Lo que edites en la hoja aparece aquí al volver a la app.</Text>
+            <View style={[s.row, { marginTop: 12 }]}>
+              <Button title="Sincronizar ahora" onPress={syncNow} style={{ flex: 1 }} />
+              <Button
+                title="Desconectar"
+                variant="danger"
+                onPress={() =>
+                  Alert.alert('¿Desconectar la hoja?', 'Los datos se quedan en el móvil y en la hoja; solo dejan de sincronizarse.', [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Desconectar', style: 'destructive', onPress: () => { setUrl(''); updateSettings({ sheetsUrl: '' }); } },
+                  ])
+                }
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={s.p}>Tus sesiones se guardan en una hoja de Google que puedes ver y editar desde cualquier sitio. Gratis. Se configura una vez:</Text>
+            <Step n={1} text="Crea una hoja de cálculo nueva en Google Sheets." />
+            <Button title="Abrir Google Sheets (hoja nueva)" variant="ghost" onPress={() => Linking.openURL('https://sheets.new')} />
+            <Step n={2} text="En la hoja: Extensiones → Apps Script. Borra lo que haya y pega el código (botón de abajo). Guarda." />
+            <Button
+              title="📋 Copiar código del script"
+              variant="ghost"
+              onPress={async () => {
+                await Clipboard.setStringAsync(APPS_SCRIPT_CODE);
+                Alert.alert('Copiado', 'Pégalo en el editor de Apps Script.');
+              }}
+            />
+            <Step n={3} text='Arriba elige la función "setup" y dale a Ejecutar. Acepta los permisos (es tu propia cuenta).' />
+            <Step n={4} text='Implementar → Nueva implementación → tipo "Aplicación web". Ejecutar como: Yo. Quién tiene acceso: Cualquier usuario. Implementar.' />
+            <Step n={5} text="Copia la URL que acaba en /exec y pégala aquí:" />
+          </>
+        )}
+        <View style={{ marginTop: 12 }}>
+          <Field label="URL de la aplicación web" placeholder="https://script.google.com/macros/s/.../exec" autoCapitalize="none" autoCorrect={false} value={url} onChangeText={setUrl} />
+        </View>
+        {url.trim() !== settings.sheetsUrl ? (
+          <Button
+            title="Conectar"
+            style={{ marginTop: 12 }}
+            disabled={!/^https:\/\/script\.google\.com\/.+\/exec\/?$/.test(url.trim())}
+            onPress={() => updateSettings({ sheetsUrl: url.trim() })}
+          />
+        ) : null}
+      </Card>
+
+      <Card>
         <Label>Datos</Label>
-        <Text style={s.p}>{sessions.length} sesiones guardadas en el móvil.</Text>
+        <Text style={s.p}>{sessions.length} sesiones guardadas en el móvil{settings.sheetsUrl ? ' y en Google Sheets' : ''}. También puedes sacar una copia en Excel:</Text>
         <Button
           title="📊 Exportar Excel"
           onPress={() => exportExcel(sessions, settings).catch((e) => Alert.alert('Error', String(e)))}
@@ -102,6 +164,15 @@ export function SettingsScreen() {
         Treadmill Urbis v{Constants.expoConfig?.version} ({String(Constants.expoConfig?.android?.versionCode ?? '')})
       </Text>
     </ScrollView>
+  );
+}
+
+function Step({ n, text }: { n: number; text: string }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 10, marginVertical: 8 }}>
+      <Text style={{ color: C.lime, fontWeight: '800', width: 18 }}>{n}.</Text>
+      <Text style={{ color: C.text, flex: 1, lineHeight: 20 }}>{text}</Text>
+    </View>
   );
 }
 

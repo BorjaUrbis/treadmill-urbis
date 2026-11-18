@@ -24,7 +24,8 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -50,6 +51,13 @@
           "androidSpeechServicePackages": [
             "com.google.android.googlequicksearchbox"
           ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Treadmill Urbis usa la cámara para leer la pantalla de la cinta.",
+          "photosPermission": "Treadmill Urbis abre tus fotos para leer los datos de la cinta."
         }
       ]
     ],

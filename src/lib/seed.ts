@@ -14,6 +14,7 @@ export const SEED_SESSIONS: Session[] = [
     loadKg: 0,
     notes: 'Velocidad variable, media aprox. 4 km/h',
     createdAt: 1,
+    updatedAt: 1,
   },
   {
     id: 'seed-2',
@@ -27,6 +28,7 @@ export const SEED_SESSIONS: Session[] = [
     loadKg: 22,
     notes: 'Mochila 22 kg',
     createdAt: 2,
+    updatedAt: 2,
   },
   {
     id: 'seed-3',
@@ -40,5 +42,6 @@ export const SEED_SESSIONS: Session[] = [
     loadKg: 0,
     notes: 'Con una pausa. La cinta se reinició a mitad (marcó 146 kcal parciales)',
     createdAt: 3,
+    updatedAt: 3,
   },
 ];

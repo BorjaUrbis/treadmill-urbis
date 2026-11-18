@@ -7,6 +7,9 @@ const K_SESSIONS = 'tu.sessions.v1';
 const K_SETTINGS = 'tu.settings.v1';
 const K_SEEDED = 'tu.seeded.v1';
 const K_API = 'tu_anthropic_api_key';
+const K_TOMB = 'tu.tombstones.v1';
+const K_TOKEN = 'tu.sheetsToken.v1';
+const K_LASTSYNC = 'tu.lastSync.v1';
 
 export async function loadSessions(): Promise<Session[]> {
   const seeded = await AsyncStorage.getItem(K_SEEDED);
@@ -16,7 +19,9 @@ export async function loadSessions(): Promise<Session[]> {
     return SEED_SESSIONS;
   }
   const raw = await AsyncStorage.getItem(K_SESSIONS);
-  return raw ? (JSON.parse(raw) as Session[]) : [];
+  const list = raw ? (JSON.parse(raw) as Session[]) : [];
+  // Migración v1 → v2: las sesiones antiguas no tenían updatedAt
+  return list.map((x) => ({ ...x, updatedAt: x.updatedAt ?? x.createdAt ?? 0 }));
 }
 
 export async function saveSessions(list: Session[]) {
@@ -47,4 +52,31 @@ export async function setApiKey(key: string | null) {
 
 export function newId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export async function loadTombstones(): Promise<string[]> {
+  const raw = await AsyncStorage.getItem(K_TOMB);
+  return raw ? (JSON.parse(raw) as string[]) : [];
+}
+
+export async function saveTombstones(t: string[]) {
+  await AsyncStorage.setItem(K_TOMB, JSON.stringify(t));
+}
+
+export async function getSheetsToken(make: () => string): Promise<string> {
+  let t = await AsyncStorage.getItem(K_TOKEN);
+  if (!t) {
+    t = make();
+    await AsyncStorage.setItem(K_TOKEN, t);
+  }
+  return t;
+}
+
+export async function loadLastSync(): Promise<number | null> {
+  const v = await AsyncStorage.getItem(K_LASTSYNC);
+  return v ? Number(v) : null;
+}
+
+export async function saveLastSync(t: number) {
+  await AsyncStorage.setItem(K_LASTSYNC, String(t));
 }

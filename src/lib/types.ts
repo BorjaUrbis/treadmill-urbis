@@ -13,6 +13,10 @@ export type Session = {
   loadKg: number;
   notes: string;
   createdAt: number;
+  /** Última modificación (ms). Sirve para resolver conflictos al sincronizar. */
+  updatedAt: number;
+  /** Momento de la última sincronización correcta con Google Sheets (ms) */
+  syncedAt?: number;
 };
 
 export type Settings = {
@@ -25,6 +29,7 @@ export type Settings = {
   weekendReminders: boolean;
   weeklySummary: boolean;
   userName: string;
+  sheetsUrl: string;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -37,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weekendReminders: false,
   weeklySummary: true,
   userName: 'Borja',
+  sheetsUrl: '',
 };
 
-export type SessionDraft = Omit<Session, 'id' | 'createdAt'>;
+export type SessionDraft = Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'syncedAt'>;

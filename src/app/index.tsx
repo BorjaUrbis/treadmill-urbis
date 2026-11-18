@@ -5,11 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useStore } from '../lib/store';
 import { Dashboard } from '../components/Dashboard';
 import { RecordScreen } from '../components/RecordScreen';
-import { HistoryScreen } from '../components/HistoryScreen';
+import { DataScreen } from '../components/DataScreen';
 import { SettingsScreen } from '../components/SettingsScreen';
 import { C, GRAD } from '../components/theme';
 
-type Tab = 'home' | 'record' | 'history' | 'settings';
+type Tab = 'home' | 'record' | 'data' | 'settings';
 
 export default function Home() {
   const { ready } = useStore();
@@ -26,14 +26,14 @@ export default function Home() {
   return (
     <SafeAreaView style={s.fill} edges={['top']}>
       <View style={s.fill}>
-        {tab === 'home' && <Dashboard onRecord={() => setTab('record')} />}
+        {tab === 'home' && <Dashboard onRecord={() => setTab('record')} onOpenSettings={() => setTab('settings')} />}
         {tab === 'record' && <RecordScreen onSaved={() => setTab('home')} />}
-        {tab === 'history' && <HistoryScreen />}
+        {tab === 'data' && <DataScreen onOpenSettings={() => setTab('settings')} />}
         {tab === 'settings' && <SettingsScreen />}
       </View>
       <View style={[s.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
         <TabBtn icon="📈" label="Inicio" active={tab === 'home'} onPress={() => setTab('home')} />
-        <TabBtn icon="📋" label="Historial" active={tab === 'history'} onPress={() => setTab('history')} />
+        <TabBtn icon="📋" label="Datos" active={tab === 'data'} onPress={() => setTab('data')} />
         <Pressable onPress={() => setTab('record')} style={s.fabWrap}>
           <LinearGradient colors={GRAD} style={s.fab}>
             <Text style={{ fontSize: 26 }}>🎙️</Text>

@@ -48,6 +48,7 @@ Reglas:
 - "Tarde" sin hora concreta: deja hora_fin null. Si dice "ahora" o "acabo de terminar", usa la hora actual.
 - Las calorías de la pantalla solo si las dice; si dice que la cinta se reinició o el dato es parcial, ponlo en notas y deja kcal_pantalla null.
 - descalzo: true/false solo si lo dice; si no, null.
+- Si te pasan una foto, los datos de la foto mandan; lo que diga el usuario los completa (carga, descalzo, fecha...).
 - No inventes datos. Usa siempre la herramienta registrar_sesiones.`;
 }
 
@@ -65,7 +66,20 @@ type ToolSession = {
   notas?: string;
 };
 
-export async function parseWithClaude(text: string, apiKey: string): Promise<ParseResult> {
+export type ImageInput = { base64: string; mediaType: 'image/jpeg' | 'image/png' };
+
+export async function parseWithClaude(text: string, apiKey: string, image?: ImageInput | null): Promise<ParseResult> {
+  const content: unknown[] = [];
+  if (image) {
+    content.push({ type: 'image', source: { type: 'base64', media_type: image.mediaType, data: image.base64 } });
+    content.push({
+      type: 'text',
+      text:
+        'Esta es una foto de la pantalla de la cinta (o de una app) con los datos de la sesión. Lee tiempo, distancia, velocidad y calorías. ' +
+        'Las calorías que salen en la foto van en kcal_pantalla. Si el tiempo aparece como mm:ss o hh:mm:ss, conviértelo a minutos.' +
+        (text ? `\nAdemás, el usuario dice: "${text}"` : '\nEl usuario no ha añadido nada más: la fecha es hoy y la hora de fin es ahora, salvo que la foto diga otra cosa.'),
+    });
+  } else content.push({ type: 'text', text });
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -79,7 +93,7 @@ export async function parseWithClaude(text: string, apiKey: string): Promise<Par
       system: systemPrompt(),
       tools: [TOOL],
       tool_choice: { type: 'tool', name: TOOL.name },
-      messages: [{ role: 'user', content: text }],
+      messages: [{ role: 'user', content }],
     }),
   });
   if (!res.ok) {
