@@ -19,6 +19,7 @@ import {
   weekSessions,
 } from '../lib/calc';
 import { Button, Card, Chip, Label, Ring, StatTile } from './ui';
+import { dailyStatus } from '../lib/daily';
 import { Heatmap, MiniLine, PaceLine, SplitBar, TapBars } from './charts';
 import { SyncBadge } from './SyncBadge';
 import { C } from './theme';
@@ -43,8 +44,7 @@ export function Dashboard({ onRecord, onOpenSettings }: { onRecord: () => void; 
   const goal = settings.weeklyGoalKm;
   const wk = totals(weekSessions(sessions, today), settings);
   const st = streak(sessions);
-  const todayKm = sessions.filter((x) => x.date === today).reduce((a, x) => a + x.distanceKm, 0);
-  const isWeekday = dayOfWeek(today) < 5;
+  const day = dailyStatus(sessions, settings, today);
   const remaining = Math.max(0, goal - wk.km);
   const daysLeft = 7 - dayOfWeek(today);
   const hour = new Date().getHours();
@@ -90,25 +90,21 @@ export function Dashboard({ onRecord, onOpenSettings }: { onRecord: () => void; 
         <SyncBadge onPress={onOpenSettings} />
       </View>
 
-      {todayKm === 0 ? (
-        <Pressable onPress={onRecord}>
-          <LinearGradient colors={isWeekday ? ['#3A1420', '#1A0F18'] : ['#1A2233', '#121722']} style={s.alert}>
-            <Text style={s.alertEmoji}>{isWeekday ? '👀' : '😎'}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={s.alertTitle}>{isWeekday ? 'Hoy todavía no has caminado' : 'Es finde, pero si te apetece...'}</Text>
-              <Text style={s.alertSub}>{isWeekday ? 'Ey, ¿qué onda? Toca subirse a la cinta. ' : ''}Toca aquí para registrar.</Text>
-            </View>
-          </LinearGradient>
-        </Pressable>
-      ) : (
-        <LinearGradient colors={['#18300F', '#0F1A10']} style={s.alert}>
-          <Text style={s.alertEmoji}>✅</Text>
+      <Pressable onPress={day.state === 'done' ? undefined : onRecord}>
+        <LinearGradient
+          colors={day.state === 'done' ? ['#18300F', '#0F1A10'] : day.state === 'partial' ? ['#3A2410', '#1A130C'] : ['#3A1420', '#1A0F18']}
+          style={s.alert}
+        >
+          <Text style={s.alertEmoji}>{day.emoji}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={s.alertTitle}>Hoy llevas {fmt(todayKm, 2)} km</Text>
-            <Text style={s.alertSub}>Bien ahí. Hoy no hay aviso.</Text>
+            <Text style={s.alertTitle}>{day.title}</Text>
+            <Text style={s.alertSub}>
+              {day.state === 'none' ? day.sub : `Hoy llevas ${fmt(day.todayKm, 2)} km. ${day.sub}`}
+              {day.state === 'done' ? '' : ' Toca para registrar.'}
+            </Text>
           </View>
         </LinearGradient>
-      )}
+      </Pressable>
 
       <Card style={{ alignItems: 'center', paddingVertical: 24 }}>
         <Label>Objetivo de la semana</Label>

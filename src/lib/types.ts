@@ -23,6 +23,7 @@ export type Settings = {
   bodyWeightKg: number;
   inclinePct: number;
   weeklyGoalKm: number;
+  dailyGoalKm: number;
   remindersEnabled: boolean;
   reminderHour: number;
   reminderMinute: number;
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   bodyWeightKg: 84,
   inclinePct: 0,
   weeklyGoalKm: 25,
+  dailyGoalKm: 10,
   remindersEnabled: true,
   reminderHour: 20,
   reminderMinute: 0,

@@ -3,6 +3,7 @@ import { ActivityIndicator, Animated, Modal, Pressable, StyleSheet, Text, View }
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useStore } from '../lib/store';
 import { Dashboard } from '../components/Dashboard';
 import { Mode, RecordScreen } from '../components/RecordScreen';
@@ -26,6 +27,7 @@ export default function Home() {
   const [menu, setMenu] = useState(false);
   const insets = useSafeAreaInsets();
   const anim = useRef(new Animated.Value(0)).current;
+  const { add } = useLocalSearchParams<{ add?: string }>();
 
   useEffect(() => {
     Animated.spring(anim, { toValue: menu ? 1 : 0, useNativeDriver: true, friction: 7, tension: 80 }).start();
@@ -37,6 +39,15 @@ export default function Home() {
     setRecordKey((k) => k + 1);
     setTab('record');
   };
+
+  // Llegada desde el widget: treadmillurbis://add?mode=...
+  useEffect(() => {
+    if (!add || !ready) return;
+    if (add === 'voice' || add === 'text' || add === 'photo') openRecord(add);
+    else setMenu(true);
+    router.setParams({ add: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [add, ready]);
 
   if (!ready)
     return (

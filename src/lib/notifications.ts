@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { addDays, dayOfWeek, fromISODate, todayISO, weekStart } from './dates';
 import { fmt, streak, totals, weekSessions } from './calc';
 import { Session, Settings } from './types';
+import { dailyMessage } from './daily';
 
 const CHANNEL = 'recordatorios';
 const DAYS_AHEAD = 30;
@@ -52,7 +53,6 @@ export async function rescheduleReminders(sessions: Session[], settings: Setting
   if (!perm.granted) return;
 
   const today = todayISO();
-  const days = new Set(sessions.map((s) => s.date));
   const now = Date.now();
   const wk = totals(weekSessions(sessions, today), settings);
   const st = streak(sessions);
@@ -62,14 +62,20 @@ export async function rescheduleReminders(sessions: Session[], settings: Setting
   if (settings.remindersEnabled) {
     for (let i = 0; i < DAYS_AHEAD; i++) {
       const iso = addDays(today, i);
-      if (days.has(iso)) continue;
+      const dayKm = sessions.filter((x) => x.date === iso).reduce((a, x) => a + x.distanceKm, 0);
+      const goalDay = settings.dailyGoalKm || 10;
+      if (dayKm >= goalDay) continue;
       if (!settings.weekendReminders && dayOfWeek(iso) >= 5) continue;
       const when = fromISODate(iso);
       when.setHours(settings.reminderHour, settings.reminderMinute, 0, 0);
       if (when.getTime() <= now + 30_000) continue;
       // Para días de otras semanas, los km de "esta semana" serían 0.
       const sameWeek = weekStart(iso) === weekStart(today);
-      const [title, body] = NUDGES[i % NUDGES.length](sameWeek ? km : '0', goal, i === 0 ? st : 0);
+      let [title, body] = NUDGES[i % NUDGES.length](sameWeek ? km : '0', goal, i === 0 ? st : 0);
+      // Los mensajes de Borja mandan: título fijo según cómo vaya el día
+      const msg = dailyMessage(dayKm > 0 ? 'partial' : 'none', goalDay - dayKm, goalDay);
+      title = `${msg.title} ${msg.emoji}`;
+      if (dayKm > 0) body = msg.sub;
       await Notifications.scheduleNotificationAsync({
         content: { title, body, data: { kind: 'reminder', date: iso } },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when, channelId: CHANNEL },

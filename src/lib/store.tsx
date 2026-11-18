@@ -17,6 +17,7 @@ import {
 } from './storage';
 import { rescheduleReminders, setupNotifications } from './notifications';
 import { newToken, syncWithSheets } from './sync';
+import { refreshWidget } from '../widget/update';
 
 export type SyncState = { status: 'off' | 'idle' | 'syncing' | 'error'; message?: string; last: number | null };
 
@@ -56,6 +57,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setSessions(next);
     await saveSessions(next);
     rescheduleReminders(next, settingsRef.current).catch(() => {});
+    refreshWidget(next, settingsRef.current);
   }, []);
 
   const runSync = useCallback(async () => {
@@ -120,6 +122,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setKey(k);
       setSync({ status: st.sheetsUrl ? 'idle' : 'off', last });
       setReady(true);
+      refreshWidget(s, st);
       try {
         await setupNotifications();
         await rescheduleReminders(s, st);
@@ -135,6 +138,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (state) => {
       if (state !== 'active' || !ready) return;
       rescheduleReminders(sessionsRef.current, settingsRef.current).catch(() => {});
+      refreshWidget(sessionsRef.current, settingsRef.current);
       runSync();
     });
     return () => sub.remove();
@@ -173,6 +177,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setSettings(next);
         await saveSettings(next);
         rescheduleReminders(sessionsRef.current, next).catch(() => {});
+        refreshWidget(sessionsRef.current, next);
         if ('sheetsUrl' in p || 'bodyWeightKg' in p || 'inclinePct' in p || 'weeklyGoalKm' in p) scheduleSync();
       },
       setApiKey: async (k) => {

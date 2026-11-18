@@ -19,6 +19,7 @@ export function SettingsScreen() {
   const [w, setW] = useState(String(settings.bodyWeightKg).replace('.', ','));
   const [inc, setInc] = useState(String(settings.inclinePct).replace('.', ','));
   const [goal, setGoal] = useState(String(settings.weeklyGoalKm).replace('.', ','));
+  const [dgoal, setDgoal] = useState(String(settings.dailyGoalKm).replace('.', ','));
   const [name, setName] = useState(settings.userName);
   const num = (s: string) => Number(s.replace(',', '.'));
 
@@ -40,6 +41,9 @@ export function SettingsScreen() {
         </View>
         <View style={[s.row, { marginTop: 12 }]}>
           <Field label="Objetivo semanal" suffix="km" keyboardType="decimal-pad" value={goal} onChangeText={setGoal} onBlur={() => num(goal) >= 0 && updateSettings({ weeklyGoalKm: num(goal) })} />
+          <Field label="Objetivo diario" suffix="km" keyboardType="decimal-pad" value={dgoal} onChangeText={setDgoal} onBlur={() => num(dgoal) > 0 && updateSettings({ dailyGoalKm: num(dgoal) })} />
+        </View>
+        <View style={[s.row, { marginTop: 12 }]}>
           <Field label="Inclinación cinta" suffix="%" keyboardType="decimal-pad" value={inc} onChangeText={setInc} onBlur={() => num(inc) >= 0 && updateSettings({ inclinePct: num(inc) })} />
         </View>
         <Text style={s.note}>Las kcal se estiman con la ecuación de marcha del ACSM, usando tu peso + la carga que lleves.</Text>
