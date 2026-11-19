@@ -57,7 +57,7 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
   useSpeechRecognitionEvent('result', (e) => {
     const tr = e.results[0]?.transcript ?? '';
     if (e.isFinal) {
-      setFinalText((p) => (p ? `${p} ${tr}` : tr).trim());
+      setFinalText((p) => (p.trim() ? `${p.trimEnd()} ${tr}` : tr).trim());
       setInterim('');
     } else setInterim(tr);
   });
@@ -115,7 +115,10 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
     }
   };
 
-  const text = (finalText + (interim ? ` ${interim}` : '')).trim();
+  // Lo que se ve en el cuadro (sin recortar, para que el espacio funcione al escribir)
+  const shown = interim ? `${finalText}${finalText && !finalText.endsWith(' ') ? ' ' : ''}${interim}` : finalText;
+  // Lo que se manda a interpretar
+  const text = shown.trim();
   const usingPhoto = mode === 'photo' && !!photo;
   const canInterpret = usingPhoto ? !!apiKey : !!text;
 
@@ -234,7 +237,7 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
         <Label>{mode === 'voice' ? 'Lo que has dicho' : mode === 'text' ? 'Escribe tu sesión' : 'Detalles extra (opcional)'}</Label>
         <TextInput
           multiline
-          value={text}
+          value={shown}
           autoFocus={mode === 'text'}
           onChangeText={(v) => {
             setFinalText(v);
