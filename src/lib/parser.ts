@@ -43,7 +43,7 @@ function systemPrompt() {
 Hoy es ${DAY_NAMES[dayOfWeek(today)]} ${today} y son las ${nowTime()}. Ayer fue ${addDays(today, -1)}.
 Reglas:
 - Si describe varios tramos distintos (p. ej. primero sin carga y luego con mochila), crea una sesión por tramo.
-- Si da dos de (tiempo, velocidad, distancia), calcula el tercero. Si dice que la velocidad fue variable, usa la media que indique.
+- Tiempo y distancia son los datos reales. Si tienes los dos, la velocidad es la MEDIA = distancia / tiempo (ignora la velocidad que diga o la que salga en pantalla, que es la del momento). Si solo tienes dos de (tiempo, velocidad, distancia), calcula el tercero.
 - Si da hora de inicio en vez de fin, calcula la hora de fin con la duración. Tramos seguidos: el segundo empieza cuando acaba el primero.
 - "Tarde" sin hora concreta: deja hora_fin null. Si dice "ahora" o "acabo de terminar", usa la hora actual.
 - Las calorías de la pantalla solo si las dice; si dice que la cinta se reinició o el dato es parcial, ponlo en notas y deja kcal_pantalla null.
@@ -76,7 +76,8 @@ export async function parseWithClaude(text: string, apiKey: string, image?: Imag
       type: 'text',
       text:
         'Esta es una foto de la pantalla de la cinta (o de una app) con los datos de la sesión. Lee tiempo, distancia, velocidad y calorías. ' +
-        'Las calorías que salen en la foto van en kcal_pantalla. Si el tiempo aparece como mm:ss o hh:mm:ss, conviértelo a minutos.' +
+        'Las calorías que salen en la foto van en kcal_pantalla. Si el tiempo aparece como mm:ss o hh:mm:ss, conviértelo a minutos con decimales (32:09 = 32.15). ' +
+        'OJO: la velocidad (SPEED) de la pantalla es la del momento, no la media; pon velocidad_kmh = distancia / (minutos/60).' +
         (text ? `\nAdemás, el usuario dice: "${text}"` : '\nEl usuario no ha añadido nada más: la fecha es hoy y la hora de fin es ahora, salvo que la foto diga otra cosa.'),
     });
   } else content.push({ type: 'text', text });

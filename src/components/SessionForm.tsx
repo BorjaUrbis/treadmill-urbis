@@ -49,6 +49,8 @@ export function SessionForm({ draft, onChange }: { draft: SessionDraft; onChange
   const today = todayISO();
   const dates = [addDays(today, -2), addDays(today, -1), today];
   const missing = [t.minutes, t.speed, t.dist].filter((x) => !x).length === 1;
+  // Si hay tiempo y distancia, al salir del campo la velocidad se pone como media
+  const recalc = missing || (!!t.minutes && !!t.dist);
 
   return (
     <View style={{ gap: 14 }}>
@@ -59,11 +61,11 @@ export function SessionForm({ draft, onChange }: { draft: SessionDraft; onChange
         {!dates.includes(draft.date) ? <Chip label={prettyDate(draft.date)} active onPress={() => {}} /> : null}
       </View>
       <View style={s.row}>
-        <Field label="Distancia" suffix="km" keyboardType="decimal-pad" value={t.dist} onChangeText={(v) => set('dist', v)} onBlur={missing ? autocomplete : undefined} />
-        <Field label="Velocidad" suffix="km/h" keyboardType="decimal-pad" value={t.speed} onChangeText={(v) => set('speed', v)} onBlur={missing ? autocomplete : undefined} />
+        <Field label="Distancia" suffix="km" keyboardType="decimal-pad" value={t.dist} onChangeText={(v) => set('dist', v)} onBlur={recalc ? autocomplete : undefined} />
+        <Field label="Velocidad media" suffix="km/h" keyboardType="decimal-pad" value={t.speed} onChangeText={(v) => set('speed', v)} onBlur={missing ? autocomplete : undefined} />
       </View>
       <View style={s.row}>
-        <Field label="Tiempo" suffix="min" keyboardType="number-pad" value={t.minutes} onChangeText={(v) => set('minutes', v)} onBlur={missing ? autocomplete : undefined} />
+        <Field label="Tiempo" suffix="min" keyboardType="number-pad" value={t.minutes} onChangeText={(v) => set('minutes', v)} onBlur={recalc ? autocomplete : undefined} />
         <Field label="Hora fin" placeholder="20:30" keyboardType="numbers-and-punctuation" value={t.end} onChangeText={(v) => set('end', v)} />
       </View>
       <View style={s.row}>

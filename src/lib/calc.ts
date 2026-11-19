@@ -23,6 +23,9 @@ export function startTime(s: Session): string | null {
 /** Completa el dato que falte entre tiempo, velocidad y distancia */
 export function completeTriad(x: { minutes?: number | null; speedKmh?: number | null; distanceKm?: number | null }) {
   let { minutes, speedKmh, distanceKm } = x;
+  // Tiempo y distancia son los datos reales: si están los dos, la velocidad es SIEMPRE la media
+  // (la de la pantalla es la del momento y cambia durante la sesión).
+  if (minutes && distanceKm) speedKmh = distanceKm / (minutes / 60);
   if (!minutes && speedKmh && distanceKm) minutes = (distanceKm / speedKmh) * 60;
   if (!distanceKm && speedKmh && minutes) distanceKm = (speedKmh * minutes) / 60;
   if (!speedKmh && distanceKm && minutes) speedKmh = distanceKm / (minutes / 60);

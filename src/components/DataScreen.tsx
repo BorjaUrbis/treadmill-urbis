@@ -93,7 +93,8 @@ function applyEdit(s: Session, key: string, raw: string): Session {
   // Si queda vacío uno de tiempo/distancia/velocidad, se calcula con los otros dos
   if (['minutes', 'distanceKm', 'speedKmh'].includes(key)) {
     const zeros = [next.minutes, next.distanceKm, next.speedKmh].filter((x) => !x).length;
-    if (zeros === 1) Object.assign(next, completeTriad(next));
+    // Con tiempo y distancia, la velocidad se recalcula como media
+    if (zeros === 1 || (key !== 'speedKmh' && next.minutes && next.distanceKm)) Object.assign(next, completeTriad(next));
   }
   return next;
 }
