@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useStore } from '../lib/store';
-import { C } from './theme';
+import { C, themed } from './theme';
 
 export function ago(t: number | null) {
   if (!t) return 'nunca';
@@ -21,21 +21,21 @@ export function SyncBadge({ onPress }: { onPress?: () => void }) {
     return () => clearInterval(i);
   }, []);
   const map = {
-    off: { icon: '☁️', txt: 'Conectar Sheets', color: C.sub },
-    idle: { icon: '✅', txt: ago(sync.last), color: C.lime },
-    syncing: { icon: '🔄', txt: 'Sincronizando', color: C.cyan },
-    error: { icon: '⚠️', txt: 'Error', color: C.orange },
+    off: { dot: C.dim, txt: 'Sin Sheets' },
+    idle: { dot: C.lime, txt: `Sincronizado ${ago(sync.last)}` },
+    syncing: { dot: C.orange, txt: 'Sincronizando' },
+    error: { dot: C.danger, txt: 'Error de sync' },
   }[sync.status];
   return (
     <Pressable onPress={sync.status === 'off' || sync.status === 'error' ? onPress : syncNow} style={s.badge}>
-      <Text style={[s.txt, { color: map.color }]}>
-        {map.icon} {map.txt}
-      </Text>
+      <View style={[s.dot, { backgroundColor: map.dot }]} />
+      <Text style={s.txt}>{map.txt}</Text>
     </Pressable>
   );
 }
 
-const s = StyleSheet.create({
-  badge: { backgroundColor: C.card, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: C.line },
-  txt: { fontSize: 12, fontWeight: '800' },
-});
+const s = themed(() => StyleSheet.create({
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 2 },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  txt: { fontSize: 12, fontWeight: '500', color: C.sub },
+}));

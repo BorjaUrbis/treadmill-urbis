@@ -20,15 +20,15 @@ export type WidgetData = {
   weekMinutes: number;
 };
 
-const CARD = '#131A26' as Hex;
-const LINE = '#222C3D' as Hex;
-const LIME = '#C6FF3D' as Hex;
-const CYAN = '#3DE0FF' as Hex;
-const SUB = '#8A94A8' as Hex;
-const TEXT = '#F2F5FA' as Hex;
+const CARD = '#17171A' as Hex;
+const LINE = '#26262B' as Hex;
+const LIME = '#3DD598' as Hex;
+const CYAN = '#8A9BAD' as Hex;
+const SUB = '#A1A1AA' as Hex;
+const TEXT = '#F4F4F5' as Hex;
 
 const n1 = (v: number) => (v >= 100 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
-const stateColor = (s: WidgetData['state']): Hex => (s === 'done' ? LIME : s === 'partial' ? '#FF9F43' : '#FF4D8D');
+const stateColor = (s: WidgetData['state']): Hex => (s === 'done' ? LIME : s === 'partial' ? '#D9A15A' : '#F06A6A');
 
 function Btn({ icon, label, mode, h, iconOnly }: { icon: string; label: string; mode: string; h: number; iconOnly: boolean }) {
   return (
@@ -49,8 +49,7 @@ function Btn({ icon, label, mode, h, iconOnly }: { icon: string; label: string; 
         flexGap: 6,
       }}
     >
-      <TextWidget text={icon} style={{ fontSize: h > 40 ? 18 : 15 }} />
-      {iconOnly ? null : <TextWidget text={label} style={{ fontSize: h > 40 ? 14 : 12, color: TEXT, fontWeight: '700' }} />}
+      <TextWidget text={iconOnly ? label.charAt(0) : label} style={{ fontSize: h > 40 ? 14 : 12, color: TEXT, fontWeight: '600' }} />
     </FlexWidget>
   );
 }
@@ -98,7 +97,7 @@ function RingStat({
       }}
     >
       <SvgWidget
-        svg={ringSvg(ring, progress, value, `/ ${n1(goal)}`, color === CYAN ? CYAN : LIME, color === CYAN ? '#8C7BFF' : CYAN)}
+        svg={ringSvg(ring, progress, value, `/ ${n1(goal)}`, LIME, LIME)}
         style={{ width: ring, height: ring }}
       />
       {showText ? (
@@ -120,13 +119,13 @@ export function TreadmillWidget({ d, width, height }: { d: WidgetData; width: nu
   const tColor = stateColor(d.state);
   const todayLeft = Math.max(0, d.goal - d.todayKm);
   const weekLeft = Math.max(0, d.weekGoal - d.weekKm);
-  const todayExtra = todayLeft > 0 ? `faltan ${n1(todayLeft)} km` : '¡cumplido! 🏆';
+  const todayExtra = todayLeft > 0 ? `faltan ${n1(todayLeft)} km` : 'cumplido';
   const weekExtra = weekLeft > 0 ? `faltan ${n1(weekLeft)} km` : '¡semana cumplida!';
 
   const root: FlexWidgetStyle = {
     height: 'match_parent',
     width: 'match_parent',
-    backgroundGradient: { from: '#111826', to: '#06080C', orientation: 'TL_BR' },
+    backgroundColor: '#0E0E10',
     borderRadius: 28,
     padding: pad,
     flexDirection: 'column',
@@ -140,8 +139,8 @@ export function TreadmillWidget({ d, width, height }: { d: WidgetData; width: nu
       <FlexWidget clickAction="OPEN_APP" style={{ ...root, justifyContent: 'space-between', flexGap: 6 }}>
         <FlexWidget style={{ flexDirection: 'row', width: 'match_parent', flexGap: 12 }}>
           {[
-            ['HOY', d.todayKm, d.goal, LIME],
-            ['SEMANA', d.weekKm, d.weekGoal, CYAN],
+            ['HOY', d.todayKm, d.goal, TEXT],
+            ['SEMANA', d.weekKm, d.weekGoal, TEXT],
           ].map(([l, v, g, c]) => (
             <FlexWidget key={String(l)} style={{ flex: 1, flexDirection: 'column', flexGap: 3 }}>
               <FlexWidget style={{ flexDirection: 'row', alignItems: 'flex-end', flexGap: 4 }}>
@@ -152,7 +151,7 @@ export function TreadmillWidget({ d, width, height }: { d: WidgetData; width: nu
             </FlexWidget>
           ))}
         </FlexWidget>
-        {H >= 130 ? <TextWidget text={`${d.emoji} ${d.title}`} maxLines={1} truncate="END" style={{ fontSize: 12, color: tColor, fontWeight: '800' }} /> : null}
+        {H >= 130 ? <TextWidget text={d.title} maxLines={1} truncate="END" style={{ fontSize: 12, color: tColor, fontWeight: '800' }} /> : null}
         <Buttons h={34} iconOnly={W < 300} />
       </FlexWidget>
     );
@@ -176,19 +175,18 @@ export function TreadmillWidget({ d, width, height }: { d: WidgetData; width: nu
   return (
     <FlexWidget clickAction="OPEN_APP" style={root}>
       <FlexWidget style={{ flexDirection: 'row', width: 'match_parent', flexGap: 10 }}>
-        <RingStat label="HOY" value={d.todayKm} goal={d.goal} ring={ring} showText={showText} color={LIME} extra={todayExtra} />
-        <RingStat label="SEMANA" value={d.weekKm} goal={d.weekGoal} ring={ring} showText={showText} color={CYAN} extra={weekExtra} />
+        <RingStat label="HOY" value={d.todayKm} goal={d.goal} ring={ring} showText={showText} color={TEXT} extra={todayExtra} />
+        <RingStat label="SEMANA" value={d.weekKm} goal={d.weekGoal} ring={ring} showText={showText} color={TEXT} extra={weekExtra} />
       </FlexWidget>
 
       <FlexWidget style={{ width: 'match_parent', flexDirection: 'row', alignItems: 'center', flexGap: 10 }}>
-        <TextWidget text={d.emoji} style={{ fontSize: 24 }} />
         <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
           <TextWidget text={d.title} maxLines={1} truncate="END" style={{ fontSize: 15, color: tColor, fontWeight: '800' }} />
           <TextWidget text={d.sub} maxLines={1} truncate="END" style={{ fontSize: 12, color: SUB }} />
         </FlexWidget>
         {d.streak > 0 ? (
           <FlexWidget style={{ backgroundColor: CARD, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 }}>
-            <TextWidget text={`🔥 ${d.streak}`} style={{ fontSize: 13, color: '#FF9F43', fontWeight: '800' }} />
+            <TextWidget text={`Racha ${d.streak}`} style={{ fontSize: 12, color: SUB, fontWeight: '700' }} />
           </FlexWidget>
         ) : null}
       </FlexWidget>

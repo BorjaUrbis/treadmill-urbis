@@ -6,7 +6,8 @@ import { fromISODate, toISODate, todayISO } from '../lib/dates';
 import { completeTriad, estimateKcal, fmt, startTime, totals } from '../lib/calc';
 import { SessionForm } from './SessionForm';
 import { Button, H1 } from './ui';
-import { C } from './theme';
+import { C, themed } from './theme';
+import { Pencil } from 'lucide-react-native';
 import { SyncBadge } from './SyncBadge';
 
 type Col = { key: string; title: string; w: number; kind: 'num' | 'text' | 'calc' | 'toggle' | 'date' | 'time' };
@@ -110,7 +111,7 @@ const Cell = memo(function Cell({ s, c, kcal, onCommit }: { s: Session; c: Col; 
         style={[st.cellBox, { width: c.w }]}
         onPress={() => onCommit({ ...s, barefoot: s.barefoot === null ? true : s.barefoot ? false : null })}
       >
-        <Text style={[st.cell, { color: s.barefoot ? C.pink : C.sub }]}>{shown}</Text>
+        <Text style={[st.cell, { color: s.barefoot ? C.text : C.dim }]}>{shown}</Text>
       </Pressable>
     );
   return (
@@ -168,7 +169,7 @@ export function DataScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
               return (
                 <Pressable key={s.id} onLongPress={() => confirmDelete(s)} style={[st.row, i % 2 ? { backgroundColor: C.bg2 } : null]}>
                   <Pressable onPress={() => setEditing(s)} style={[st.cellBox, { width: 34 }]}>
-                    <Text style={{ fontSize: 14 }}>✏️</Text>
+                    <Pencil size={15} color={C.sub} />
                   </Pressable>
                   {COLS.map((c) => (
                     <Cell key={`${s.id}-${c.key}-${s.updatedAt}`} s={s} c={c} kcal={kcal} onCommit={updateSession} />
@@ -228,21 +229,21 @@ export function DataScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   );
 }
 
-const st = StyleSheet.create({
+const st = themed(() => StyleSheet.create({
   wrap: { padding: 20, gap: 14, paddingBottom: 140 },
   sub: { color: C.sub, fontSize: 13, marginTop: -4 },
   table: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: C.line, backgroundColor: C.card },
   row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: C.line, minHeight: 44 },
   head: { backgroundColor: C.cardHi },
-  headTxt: { color: C.lime, fontWeight: '800', fontSize: 12, textAlign: 'center', paddingVertical: 10 },
+  headTxt: { color: C.sub, fontWeight: '700', fontSize: 12, textAlign: 'center', paddingVertical: 10 },
   cell: { color: C.text, fontSize: 14, textAlign: 'center', fontWeight: '600' },
   cellBox: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },
   input: { paddingVertical: 10, paddingHorizontal: 4 },
-  focus: { backgroundColor: C.lime + '22', borderRadius: 8, color: C.lime },
+  focus: { backgroundColor: C.accentSoft, borderRadius: 8, color: C.text },
   calc: { color: C.dim, paddingVertical: 10 },
   foot: { backgroundColor: C.cardHi },
   footTxt: { color: C.text, fontWeight: '800', fontSize: 13, textAlign: 'center', paddingVertical: 12 },
   modalBg: { flex: 1, backgroundColor: '#000a', justifyContent: 'flex-end' },
   sheet: { maxHeight: '90%', backgroundColor: C.bg2, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, borderWidth: 1, borderColor: C.line },
   sheetTitle: { color: C.text, fontSize: 22, fontWeight: '800' },
-});
+}));

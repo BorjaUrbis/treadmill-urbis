@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient as SvgGrad, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
-import { C } from './theme';
+import { C, themed } from './theme';
 
 const fmt1 = (v: number) => (v >= 10 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
 
@@ -38,7 +38,7 @@ export function TapBars({
       <View style={st.tipRow}>
         {sel !== null ? (
           <Text style={st.tip}>
-            {tipLabels[sel]}: <Text style={{ color: C.lime }}>{fmt1(values[sel])} {unit}</Text>
+            {tipLabels[sel]}: <Text style={{ color: C.text }}>{fmt1(values[sel])} {unit}</Text>
           </Text>
         ) : (
           <Text style={st.tipHint}>Toca una barra para ver el dato</Text>
@@ -60,13 +60,13 @@ export function TapBars({
             const active = sel === i || (sel === null && i === highlight);
             return (
               <React.Fragment key={i}>
-                <Rect x={x} y={y} width={bw} height={h} rx={Math.min(6, bw / 2)} fill={v > 0 ? 'url(#tb)' : C.line} opacity={v > 0 && !active ? 0.55 : 1} />
+                <Rect x={x} y={y} width={bw} height={h} rx={Math.min(6, bw / 2)} fill={v > 0 ? C.lime : C.cardHi} opacity={v > 0 && !active ? 0.45 : 1} />
                 {showVals && v > 0 ? (
                   <SvgText x={x + bw / 2} y={Math.max(10, y - 4)} fill={C.sub} fontSize={10} textAnchor="middle">
                     {fmt1(v)}
                   </SvgText>
                 ) : null}
-                <SvgText x={x + bw / 2} y={height - 4} fill={active ? C.lime : C.dim} fontSize={10} fontWeight={active ? '800' : '400'} textAnchor="middle">
+                <SvgText x={x + bw / 2} y={height - 4} fill={active ? C.text : C.dim} fontSize={10} fontWeight={active ? '700' : '400'} textAnchor="middle">
                   {labels[i]}
                 </SvgText>
               </React.Fragment>
@@ -105,18 +105,18 @@ export function PaceLine({ cumulative, goal, width, height = 160 }: { cumulative
       <Svg width={width} height={height}>
         <Defs>
           <SvgGrad id="pa" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={C.lime} stopOpacity={0.35} />
+            <Stop offset="0" stopColor={C.lime} stopOpacity={0.18} />
             <Stop offset="1" stopColor={C.lime} stopOpacity={0} />
           </SvgGrad>
         </Defs>
-        <Line x1={X(0)} y1={Y(goal / 7)} x2={X(6)} y2={Y(goal)} stroke={C.dim} strokeWidth={2} strokeDasharray="6 6" />
+        <Line x1={X(0)} y1={Y(goal / 7)} x2={X(6)} y2={Y(goal)} stroke={C.dim} strokeWidth={1.5} strokeDasharray="5 5" />
         {area ? <Path d={area} fill="url(#pa)" /> : null}
         {path ? <Path d={path} stroke={C.lime} strokeWidth={3} fill="none" strokeLinejoin="round" /> : null}
         {pts.map((p, i) => (
-          <Circle key={i} cx={p[0]} cy={p[1]} r={i === lastIdx ? 5 : 3} fill={i === lastIdx ? C.lime : C.bg} stroke={C.lime} strokeWidth={2} />
+          <Circle key={i} cx={p[0]} cy={p[1]} r={i === lastIdx ? 5 : 3} fill={i === lastIdx ? C.lime : C.card} stroke={C.lime} strokeWidth={2} />
         ))}
         {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
-          <SvgText key={d + i} x={X(i)} y={height - 4} fill={i === lastIdx ? C.lime : C.dim} fontSize={11} textAnchor="middle">
+          <SvgText key={d + i} x={X(i)} y={height - 4} fill={i === lastIdx ? C.text : C.dim} fontSize={11} textAnchor="middle">
             {d}
           </SvgText>
         ))}
@@ -126,8 +126,8 @@ export function PaceLine({ cumulative, goal, width, height = 160 }: { cumulative
           </SvgText>
         ) : null}
       </Svg>
-      <Text style={[st.paceTxt, { color: ahead >= 0 ? C.lime : C.orange }]}>
-        {ahead >= 0 ? `Vas ${fmt1(ahead)} km por delante del ritmo 💪` : `Vas ${fmt1(-ahead)} km por detrás del ritmo`}
+      <Text style={[st.paceTxt, { color: ahead >= 0 ? C.lime : C.sub }]}>
+        {ahead >= 0 ? `Vas ${fmt1(ahead)} km por delante del ritmo` : `Vas ${fmt1(-ahead)} km por detrás del ritmo`}
       </Text>
       <Text style={st.legend}>— — ritmo para llegar a {fmt1(goal)} km el domingo</Text>
     </View>
@@ -156,12 +156,10 @@ export function Heatmap({
   const vals = Object.values(kmByDay);
   const max = Math.max(...vals, 1);
   const color = (km: number) => {
-    if (!km) return C.line;
+    if (!km) return C.cardHi;
     const t = km / max;
-    if (t < 0.25) return '#2E5A1E';
-    if (t < 0.5) return '#4F8F25';
-    if (t < 0.75) return '#86C930';
-    return C.lime;
+    const a = t < 0.25 ? '40' : t < 0.5 ? '70' : t < 0.75 ? 'B0' : 'FF';
+    return C.lime + a;
   };
   const cells: { d: string; x: number; y: number }[] = [];
   for (let w = 0; w < weeks; w++) for (let r = 0; r < 7; r++) cells.push({ d: addDays(first, w * 7 + r), x: labelW + w * (cell + gap), y: r * (cell + gap) });
@@ -189,14 +187,14 @@ export function Heatmap({
         ))}
       </View>
       <Text style={st.legend}>
-        {sel ? `${sel.split('-').reverse().join('/')}: ${fmt1(kmByDay[sel] || 0)} km` : `Últimas ${weeks} semanas · más verde = más km`}
+        {sel ? `${sel.split('-').reverse().join('/')}: ${fmt1(kmByDay[sel] || 0)} km` : `Últimas ${weeks} semanas · más intenso = más km`}
       </Text>
     </View>
   );
 }
 
 /** Línea simple para una serie (p. ej. velocidad media por semana) */
-export function MiniLine({ values, labels, width, height = 120, color = C.cyan, unit = '' }: { values: number[]; labels: string[]; width: number; height?: number; color?: string; unit?: string }) {
+export function MiniLine({ values, labels, width, height = 120, color = C.lime, unit = '' }: { values: number[]; labels: string[]; width: number; height?: number; color?: string; unit?: string }) {
   const [sel, setSel] = useState<number | null>(null);
   const present = values.map((v, i) => [i, v] as const).filter(([, v]) => v > 0);
   const vs = present.map(([, v]) => v);
@@ -245,12 +243,12 @@ export function SplitBar({ parts }: { parts: { label: string; value: number; col
         {parts.map((p) =>
           p.value > 0 ? <View key={p.label} style={{ flex: p.value / total, backgroundColor: p.color }} /> : null,
         )}
-        {parts.every((p) => !p.value) ? <View style={{ flex: 1, backgroundColor: C.line }} /> : null}
+        {parts.every((p) => !p.value) ? <View style={{ flex: 1, backgroundColor: C.cardHi }} /> : null}
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {parts.map((p) => (
           <Text key={p.label} style={st.legendItem}>
-            <Text style={{ color: p.color }}>● </Text>
+            <Text style={{ color: p.color === C.line ? C.dim : p.color }}>● </Text>
             {p.label} {Math.round((p.value / total) * 100)}%
           </Text>
         ))}
@@ -259,12 +257,12 @@ export function SplitBar({ parts }: { parts: { label: string; value: number; col
   );
 }
 
-const st = StyleSheet.create({
+const st = themed(() => StyleSheet.create({
   tipRow: { height: 20, marginBottom: 4 },
   tip: { color: C.text, fontWeight: '700', fontSize: 13 },
   tipHint: { color: C.dim, fontSize: 12, marginBottom: 4 },
   paceTxt: { fontWeight: '800', fontSize: 14, marginTop: 8 },
   legend: { color: C.dim, fontSize: 12, marginTop: 6 },
-  split: { flexDirection: 'row', height: 14, borderRadius: 7, overflow: 'hidden', backgroundColor: C.line },
+  split: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', backgroundColor: C.cardHi, gap: 2 },
   legendItem: { color: C.sub, fontSize: 12, fontWeight: '600' },
-});
+}));

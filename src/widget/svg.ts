@@ -1,11 +1,11 @@
 /** Gráficos SVG para el widget (se pintan con AndroidSVG). */
 
-const LIME = '#C6FF3D';
-const CYAN = '#3DE0FF';
-const LINE = '#232B3A';
-const SUB = '#8A94A8';
-const DIM = '#566075';
-const TEXT = '#F2F5FA';
+const LIME = '#3DD598';
+const CYAN = '#3DD598';
+const LINE = '#26262B';
+const SUB = '#A1A1AA';
+const DIM = '#6B6B74';
+const TEXT = '#F4F4F5';
 
 const n1 = (v: number) => (v >= 100 ? String(Math.round(v)) : v.toFixed(1).replace('.', ','));
 
@@ -44,7 +44,7 @@ export function weekBarsSvg(w: number, h: number, values: number[], highlight: n
     const x = i * (bw + gap);
     const y = top + ch - bh;
     const hi = i === highlight;
-    const fill = v <= 0 ? LINE : v >= dailyGoal ? 'url(#b)' : hi ? 'url(#b)' : '#3D6B2A';
+    const fill = v <= 0 ? LINE : v >= dailyGoal || hi ? LIME : '#2A6B52';
     bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(6, bw / 2).toFixed(1)}" fill="${fill}"/>`;
     if (v > 0)
       bars += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 4).toFixed(1)}" fill="${SUB}" font-family="sans-serif" font-size="10" text-anchor="middle">${n1(v)}</text>`;

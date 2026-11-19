@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Camera, Image as ImageIcon, Mic, PenLine, Square } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
@@ -11,7 +11,7 @@ import { SessionDraft } from '../lib/types';
 import { todayISO } from '../lib/dates';
 import { SessionForm } from './SessionForm';
 import { Button, Card, H1, Label } from './ui';
-import { C, GRAD } from './theme';
+import { C, themed } from './theme';
 
 export type Mode = 'voice' | 'text' | 'photo';
 
@@ -190,14 +190,14 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
       <View style={s.modes}>
         {(
           [
-            ['voice', '🎙️', 'Voz'],
-            ['text', '✍️', 'Texto'],
-            ['photo', '📷', 'Foto'],
+            ['voice', Mic, 'Voz'],
+            ['text', PenLine, 'Texto'],
+            ['photo', Camera, 'Foto'],
           ] as const
-        ).map(([m, icon, label]) => (
+        ).map(([m, Icon, label]) => (
           <Pressable key={m} onPress={() => setMode(m)} style={[s.mode, mode === m && s.modeOn]}>
-            <Text style={s.modeIcon}>{icon}</Text>
-            <Text style={[s.modeLbl, mode === m && { color: C.lime }]}>{label}</Text>
+            <Icon size={16} color={mode === m ? C.text : C.sub} strokeWidth={2} />
+            <Text style={[s.modeLbl, mode === m && { color: C.text }]}>{label}</Text>
           </Pressable>
         ))}
       </View>
@@ -207,9 +207,9 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
         <View style={s.micWrap}>
           <Animated.View style={[s.halo, { transform: [{ scale }], opacity }]} />
           <Pressable onPress={toggleMic}>
-            <LinearGradient colors={listening ? [C.pink, C.orange] : GRAD} style={s.mic}>
-              <Text style={s.micIcon}>{listening ? '■' : '🎙️'}</Text>
-            </LinearGradient>
+            <View style={[s.mic, { backgroundColor: listening ? C.danger : C.lime }]}>
+              {listening ? <Square size={34} color="#fff" fill="#fff" /> : <Mic size={44} color={C.onAccent} strokeWidth={2} />}
+            </View>
           </Pressable>
           <Text style={s.micLbl}>{listening ? 'Escuchando... toca para parar' : 'Toca para hablar'}</Text>
         </View>
@@ -226,8 +226,8 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
             </View>
           ) : (
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button title="📸 Cámara" onPress={() => pickPhoto('camera')} style={{ flex: 1 }} />
-              <Button title="🖼️ Galería" variant="ghost" onPress={() => pickPhoto('library')} style={{ flex: 1 }} />
+              <Button title="Cámara" icon={<Camera size={18} color={C.onAccent} />} onPress={() => pickPhoto('camera')} style={{ flex: 1 }} />
+              <Button title="Galería" icon={<ImageIcon size={18} color={C.text} />} variant="ghost" onPress={() => pickPhoto('library')} style={{ flex: 1 }} />
             </View>
           )}
         </Card>
@@ -253,7 +253,7 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
         />
         {mode === 'photo' ? (
           <Text style={s.dictate} onPress={toggleMic}>
-            {listening ? '■ Parar dictado' : '🎙️ Dictar detalles'}
+            {listening ? 'Parar dictado' : 'Dictar detalles'}
           </Text>
         ) : null}
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -264,8 +264,8 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
       </Card>
 
       {question ? (
-        <Card style={{ borderColor: C.orange }}>
-          <Text style={{ color: C.orange, fontWeight: '700' }}>🤔 {question}</Text>
+        <Card>
+          <Text style={{ color: C.text, fontWeight: '600' }}>{question}</Text>
         </Card>
       ) : null}
 
@@ -299,21 +299,19 @@ export function RecordScreen({ onSaved, initialMode = 'voice' }: { onSaved: () =
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   wrap: { padding: 20, gap: 14, paddingBottom: 140 },
   sub: { color: C.sub, fontSize: 14, marginTop: -4 },
-  modes: { flexDirection: 'row', gap: 10 },
-  mode: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
-  modeOn: { borderColor: C.lime, backgroundColor: C.lime + '14' },
-  modeIcon: { fontSize: 22 },
-  modeLbl: { color: C.sub, fontWeight: '800', fontSize: 13, marginTop: 4 },
+  modes: { flexDirection: 'row', backgroundColor: C.cardHi, borderRadius: 12, padding: 3 },
+  mode: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 10 },
+  modeOn: { backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
+  modeLbl: { color: C.sub, fontWeight: '600', fontSize: 13 },
   micWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: 18 },
-  halo: { position: 'absolute', top: 18, width: 130, height: 130, borderRadius: 65, backgroundColor: C.lime },
-  mic: { width: 130, height: 130, borderRadius: 65, alignItems: 'center', justifyContent: 'center' },
-  micIcon: { fontSize: 48, color: '#fff' },
-  micLbl: { color: C.sub, marginTop: 14, fontWeight: '600' },
+  halo: { position: 'absolute', top: 18, width: 120, height: 120, borderRadius: 60, backgroundColor: C.danger },
+  mic: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center' },
+  micLbl: { color: C.sub, marginTop: 14, fontWeight: '500' },
   transcript: { color: C.text, fontSize: 16, minHeight: 90, textAlignVertical: 'top', marginBottom: 14, lineHeight: 22 },
-  photo: { width: '100%', height: 260, borderRadius: 14, backgroundColor: C.bg2 },
-  retake: { color: C.cyan, fontWeight: '700', textAlign: 'center', marginTop: 10 },
-  dictate: { color: C.cyan, fontWeight: '700', marginBottom: 12 },
-});
+  photo: { width: '100%', height: 260, borderRadius: 14, backgroundColor: C.cardHi },
+  retake: { color: C.lime, fontWeight: '600', textAlign: 'center', marginTop: 10 },
+  dictate: { color: C.lime, fontWeight: '600', marginBottom: 12 },
+}));

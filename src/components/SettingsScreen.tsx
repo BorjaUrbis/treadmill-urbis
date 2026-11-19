@@ -7,8 +7,8 @@ import { ago } from './SyncBadge';
 import { useStore } from '../lib/store';
 import { exportExcel } from '../lib/exportExcel';
 import { sendTestNotification, setupNotifications } from '../lib/notifications';
-import { Button, Card, Field, H1, Label } from './ui';
-import { C } from './theme';
+import { Button, Card, Field, H1, Label, Segmented } from './ui';
+import { C, themed } from './theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -32,6 +32,19 @@ export function SettingsScreen() {
   return (
     <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
       <H1>Ajustes</H1>
+
+      <Card>
+        <Label>Apariencia</Label>
+        <Segmented
+          value={settings.theme}
+          options={[
+            ['system', 'Sistema'],
+            ['light', 'Claro'],
+            ['dark', 'Oscuro'],
+          ]}
+          onChange={(v) => updateSettings({ theme: v })}
+        />
+      </Card>
 
       <Card>
         <Label>Tú</Label>
@@ -78,7 +91,7 @@ export function SettingsScreen() {
         <Label>Voz con Claude</Label>
         <Text style={s.p}>
           {apiKey
-            ? `✅ Clave guardada (…${apiKey.slice(-4)}). La voz se interpreta con Claude Haiku.`
+            ? `Clave guardada (…${apiKey.slice(-4)}). Voz, texto y fotos se interpretan con Claude Haiku.`
             : 'Sin clave: la voz usa un intérprete básico. Pega aquí tu clave de console.anthropic.com para hablar con naturalidad.'}
         </Text>
         <Field label="Clave de API" placeholder="sk-ant-..." autoCapitalize="none" autoCorrect={false} secureTextEntry value={keyDraft} onChangeText={setKeyDraft} />
@@ -103,10 +116,10 @@ export function SettingsScreen() {
           <>
             <Text style={s.p}>
               {sync.status === 'error'
-                ? `⚠️ ${sync.message}`
+                ? sync.message ?? 'Error'
                 : sync.status === 'syncing'
-                  ? '🔄 Sincronizando...'
-                  : `✅ Conectado. Última sincronización: ${ago(sync.last)}.`}
+                  ? 'Sincronizando...'
+                  : `Conectado. Última sincronización: ${ago(sync.last)}.`}
             </Text>
             <Text style={s.note}>Se sincroniza solo al abrir la app y cada vez que cambias algo. Lo que edites en la hoja aparece aquí al volver a la app.</Text>
             <View style={[s.row, { marginTop: 12 }]}>
@@ -130,7 +143,7 @@ export function SettingsScreen() {
             <Button title="Abrir Google Sheets (hoja nueva)" variant="ghost" onPress={() => Linking.openURL('https://sheets.new')} />
             <Step n={2} text="En la hoja: Extensiones → Apps Script. Borra lo que haya y pega el código (botón de abajo). Guarda." />
             <Button
-              title="📋 Copiar código del script"
+              title="Copiar código del script"
               variant="ghost"
               onPress={async () => {
                 await Clipboard.setStringAsync(APPS_SCRIPT_CODE);
@@ -159,7 +172,7 @@ export function SettingsScreen() {
         <Label>Datos</Label>
         <Text style={s.p}>{sessions.length} sesiones guardadas en el móvil{settings.sheetsUrl ? ' y en Google Sheets' : ''}. También puedes sacar una copia en Excel:</Text>
         <Button
-          title="📊 Exportar Excel"
+          title="Exportar Excel"
           onPress={() => exportExcel(sessions, settings).catch((e) => Alert.alert('Error', String(e)))}
         />
       </Card>
@@ -184,12 +197,12 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   return (
     <View style={s.toggle}>
       <Text style={s.tLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: C.lime, false: C.line }} thumbColor={value ? '#fff' : C.sub} />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: C.lime, false: C.line }} thumbColor={value ? '#fff' : C.dim} />
     </View>
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   wrap: { padding: 20, gap: 14, paddingBottom: 120 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   note: { color: C.dim, fontSize: 12, marginTop: 10 },
@@ -200,5 +213,5 @@ const s = StyleSheet.create({
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.bg2, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
   stepTxt: { color: C.text, fontSize: 22, fontWeight: '700' },
-  time: { color: C.lime, fontSize: 22, fontWeight: '800', minWidth: 70, textAlign: 'center' },
-});
+  time: { color: C.text, fontSize: 20, fontWeight: '700', minWidth: 70, textAlign: 'center' },
+}));

@@ -5,7 +5,7 @@ import { addDays, prettyDate, todayISO } from '../lib/dates';
 import { completeTriad, estimateKcal, fmt } from '../lib/calc';
 import { useStore } from '../lib/store';
 import { Chip, Field } from './ui';
-import { C } from './theme';
+import { C, themed } from './theme';
 
 const toStr = (n: number | null | undefined) => (n === null || n === undefined || n === 0 ? '' : String(n).replace('.', ','));
 const toNum = (s: string) => {
@@ -73,8 +73,8 @@ export function SessionForm({ draft, onChange }: { draft: SessionDraft; onChange
         <Field label="Kcal pantalla" suffix="kcal" keyboardType="number-pad" value={t.kcal} onChangeText={(v) => set('kcal', v)} placeholder="opcional" />
       </View>
       <View style={s.row}>
-        <Chip label="🦶 Descalzo" active={draft.barefoot === true} onPress={() => onChange({ ...draft, barefoot: draft.barefoot === true ? null : true })} color={C.pink} />
-        <Chip label="👟 Con zapatillas" active={draft.barefoot === false} onPress={() => onChange({ ...draft, barefoot: draft.barefoot === false ? null : false })} color={C.cyan} />
+        <Chip label="Descalzo" active={draft.barefoot === true} onPress={() => onChange({ ...draft, barefoot: draft.barefoot === true ? null : true })} />
+        <Chip label="Con zapatillas" active={draft.barefoot === false} onPress={() => onChange({ ...draft, barefoot: draft.barefoot === false ? null : false })} />
       </View>
       <Field label="Notas" value={draft.notes} onChangeText={(v) => onChange({ ...draft, notes: v })} placeholder="Pausas, sensaciones..." />
       <Text style={s.kcal}>≈ {fmt(estimateKcal(draft, settings), 0)} kcal estimadas con tu peso{draft.loadKg ? ' + carga' : ''}</Text>
@@ -82,7 +82,7 @@ export function SessionForm({ draft, onChange }: { draft: SessionDraft; onChange
   );
 }
 
-const s = StyleSheet.create({
+const s = themed(() => StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  kcal: { color: C.orange, fontWeight: '700', fontSize: 14 },
-});
+  kcal: { color: C.sub, fontWeight: '600', fontSize: 13 },
+}));

@@ -31,6 +31,7 @@ export type Settings = {
   weeklySummary: boolean;
   userName: string;
   sheetsUrl: string;
+  theme: 'system' | 'light' | 'dark';
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: Settings = {
   weeklySummary: true,
   userName: 'Borja',
   sheetsUrl: '',
+  theme: 'system',
 };
 
 export type SessionDraft = Omit<Session, 'id' | 'createdAt' | 'updatedAt' | 'syncedAt'>;

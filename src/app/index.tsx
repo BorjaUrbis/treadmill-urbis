@@ -1,27 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Camera, ChartColumn, ChevronRight, House, Mic, PenLine, Plus, Settings, Table2 } from 'lucide-react-native';
 import { useStore } from '../lib/store';
 import { Dashboard } from '../components/Dashboard';
 import { Mode, RecordScreen } from '../components/RecordScreen';
 import { DataScreen } from '../components/DataScreen';
 import { SettingsScreen } from '../components/SettingsScreen';
-import { C, GRAD } from '../components/theme';
+import { C, themed } from '../components/theme';
 
-type Tab = 'home' | 'record' | 'data' | 'settings';
+type Tab = 'home' | 'stats' | 'record' | 'data' | 'settings';
 
-const ACTIONS: { mode: Mode; icon: string; title: string; sub: string }[] = [
-  { mode: 'voice', icon: '🎙️', title: 'Hablar', sub: 'Cuéntalo con tu voz' },
-  { mode: 'text', icon: '✍️', title: 'Escribir', sub: 'Tecléalo como quieras' },
-  { mode: 'photo', icon: '📷', title: 'Foto', sub: 'De la pantalla de la cinta' },
+// Se conserva la pestaña al cambiar de tema (la app se vuelve a montar)
+let lastTab: Tab = 'home';
+
+const ACTIONS: { mode: Mode; Icon: typeof Mic; title: string; sub: string }[] = [
+  { mode: 'voice', Icon: Mic, title: 'Hablar', sub: 'Cuéntalo con tu voz' },
+  { mode: 'text', Icon: PenLine, title: 'Escribir', sub: 'Tecléalo como quieras' },
+  { mode: 'photo', Icon: Camera, title: 'Foto', sub: 'De la pantalla de la cinta' },
 ];
 
 export default function Home() {
   const { ready } = useStore();
-  const [tab, setTab] = useState<Tab>('home');
+  const [tab, setTabState] = useState<Tab>(lastTab);
   const [recordMode, setRecordMode] = useState<Mode>('voice');
   const [recordKey, setRecordKey] = useState(0);
   const [menu, setMenu] = useState(false);
@@ -29,8 +32,13 @@ export default function Home() {
   const anim = useRef(new Animated.Value(0)).current;
   const { add } = useLocalSearchParams<{ add?: string }>();
 
+  const setTab = (t: Tab) => {
+    lastTab = t === 'record' ? 'home' : t;
+    setTabState(t);
+  };
+
   useEffect(() => {
-    Animated.spring(anim, { toValue: menu ? 1 : 0, useNativeDriver: true, friction: 7, tension: 80 }).start();
+    Animated.timing(anim, { toValue: menu ? 1 : 0, duration: 180, useNativeDriver: true }).start();
   }, [menu, anim]);
 
   const openRecord = (m: Mode) => {
@@ -57,118 +65,113 @@ export default function Home() {
     );
 
   const rotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '45deg'] });
-  const barBottom = Math.max(insets.bottom, 10);
+  const barBottom = Math.max(insets.bottom, 8);
+
+  const fab = (onPress: () => void) => (
+    <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => [s.fab, pressed && { opacity: 0.8 }]}>
+      <Animated.View style={{ transform: [{ rotate }] }}>
+        <Plus size={26} color={C.onAccent} strokeWidth={2.4} />
+      </Animated.View>
+    </Pressable>
+  );
 
   return (
     <SafeAreaView style={s.fill} edges={['top']}>
       <View style={s.fill}>
-        {tab === 'home' && <Dashboard onRecord={() => setMenu(true)} onOpenSettings={() => setTab('settings')} />}
+        {tab === 'home' && <Dashboard section="home" onRecord={() => setMenu(true)} onOpenSettings={() => setTab('settings')} />}
+        {tab === 'stats' && <Dashboard section="stats" onRecord={() => setMenu(true)} onOpenSettings={() => setTab('settings')} />}
         {tab === 'record' && <RecordScreen key={recordKey} initialMode={recordMode} onSaved={() => setTab('home')} />}
         {tab === 'data' && <DataScreen onOpenSettings={() => setTab('settings')} />}
         {tab === 'settings' && <SettingsScreen />}
       </View>
 
       <View style={[s.bar, { paddingBottom: barBottom }]}>
-        <View style={s.side}>
-          <TabBtn icon="📈" label="Inicio" active={tab === 'home'} onPress={() => setTab('home')} />
-          <TabBtn icon="📋" label="Datos" active={tab === 'data'} onPress={() => setTab('data')} />
+        <TabBtn Icon={House} label="Inicio" active={tab === 'home'} onPress={() => setTab('home')} />
+        <TabBtn Icon={ChartColumn} label="Progreso" active={tab === 'stats'} onPress={() => setTab('stats')} />
+        <View style={s.center}>
+          {fab(() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            setMenu(true);
+          })}
         </View>
-        <View style={{ width: 84 }} />
-        <View style={s.side}>
-          <TabBtn icon="⚙️" label="Ajustes" active={tab === 'settings'} onPress={() => setTab('settings')} />
-        </View>
+        <TabBtn Icon={Table2} label="Datos" active={tab === 'data'} onPress={() => setTab('data')} />
+        <TabBtn Icon={Settings} label="Ajustes" active={tab === 'settings'} onPress={() => setTab('settings')} />
       </View>
 
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)} statusBarTranslucent>
         <Pressable style={s.backdrop} onPress={() => setMenu(false)}>
-          <View style={[s.menu, { bottom: barBottom + 96 }]}>
-            <Text style={s.menuTitle}>Añade tu sesión</Text>
-            {ACTIONS.map((a, i) => (
-              <Animated.View
-                key={a.mode}
-                style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [30 + i * 12, 0] }) }] }}
+          <Animated.View
+            style={[
+              s.menu,
+              { bottom: barBottom + 84, opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] },
+            ]}
+          >
+            <Text style={s.menuTitle}>Nueva sesión</Text>
+            {ACTIONS.map(({ mode, Icon, title, sub }, i) => (
+              <Pressable
+                key={mode}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  openRecord(mode);
+                }}
+                style={({ pressed }) => [s.action, i > 0 && s.actionSep, pressed && { backgroundColor: C.cardHi }]}
               >
-                <Pressable
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    openRecord(a.mode);
-                  }}
-                  style={({ pressed }) => [s.action, pressed && { opacity: 0.7 }]}
-                >
-                  <LinearGradient colors={GRAD} style={s.actionIcon}>
-                    <Text style={{ fontSize: 24 }}>{a.icon}</Text>
-                  </LinearGradient>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.actionTitle}>{a.title}</Text>
-                    <Text style={s.actionSub}>{a.sub}</Text>
-                  </View>
-                  <Text style={s.chev}>›</Text>
-                </Pressable>
-              </Animated.View>
+                <View style={s.actionIcon}>
+                  <Icon size={20} color={C.lime} strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.actionTitle}>{title}</Text>
+                  <Text style={s.actionSub}>{sub}</Text>
+                </View>
+                <ChevronRight size={18} color={C.dim} />
+              </Pressable>
             ))}
-          </View>
+          </Animated.View>
         </Pressable>
-        <View style={[s.fabWrapModal, { bottom: barBottom + 18 }]} pointerEvents="box-none">
-          <Fab rotate={rotate} onPress={() => setMenu(false)} />
+        <View style={[s.bar, s.barGhost, { paddingBottom: barBottom }]} pointerEvents="box-none">
+          <View style={{ flex: 2 }} />
+          <View style={s.center}>{fab(() => setMenu(false))}</View>
+          <View style={{ flex: 2 }} />
         </View>
       </Modal>
-
-      <View style={[s.fabWrap, { bottom: barBottom + 18 }]} pointerEvents="box-none">
-        <Fab
-          rotate={rotate}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            setMenu(true);
-          }}
-        />
-      </View>
     </SafeAreaView>
   );
 }
 
-function Fab({ rotate, onPress }: { rotate: Animated.AnimatedInterpolation<string>; onPress: () => void }) {
+function TabBtn({ Icon, label, active, onPress }: { Icon: typeof Mic; label: string; active: boolean; onPress: () => void }) {
+  const color = active ? C.text : C.dim;
   return (
-    <Pressable onPress={onPress} hitSlop={10}>
-      <LinearGradient colors={GRAD} style={s.fab}>
-        <Animated.Text style={[s.plus, { transform: [{ rotate }] }]}>+</Animated.Text>
-      </LinearGradient>
+    <Pressable onPress={onPress} style={s.tab} hitSlop={4}>
+      <Icon size={22} color={color} strokeWidth={active ? 2.2 : 1.8} />
+      <Text style={[s.tabLbl, { color }]}>{label}</Text>
     </Pressable>
   );
 }
 
-function TabBtn({ icon, label, active, onPress }: { icon: string; label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={s.tab}>
-      <Text style={{ fontSize: 20, opacity: active ? 1 : 0.45 }}>{icon}</Text>
-      <Text style={[s.tabLbl, active && { color: C.lime }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-const s = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: C.bg },
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: C.bg2,
-    borderTopWidth: 1,
-    borderTopColor: C.line,
-    paddingTop: 10,
-  },
-  side: { flex: 1, flexDirection: 'row', justifyContent: 'space-around' },
-  tab: { alignItems: 'center', flex: 1, gap: 2 },
-  tabLbl: { color: C.dim, fontSize: 11, fontWeight: '700' },
-  fabWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  fabWrapModal: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  fab: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: C.bg },
-  plus: { fontSize: 40, lineHeight: 44, fontWeight: '400', color: '#06100A', marginTop: -2 },
-  backdrop: { flex: 1, backgroundColor: '#000c' },
-  menu: { position: 'absolute', left: 20, right: 20, gap: 10 },
-  menuTitle: { color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 4, textAlign: 'center' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.card, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: C.line },
-  actionIcon: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  actionTitle: { color: C.text, fontSize: 17, fontWeight: '800' },
-  actionSub: { color: C.sub, fontSize: 13, marginTop: 2 },
-  chev: { color: C.dim, fontSize: 28, fontWeight: '300' },
-});
+const s = themed(() =>
+  StyleSheet.create({
+    fill: { flex: 1, backgroundColor: C.bg },
+    bar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.bg2,
+      borderTopWidth: 1,
+      borderTopColor: C.line,
+      paddingTop: 8,
+      paddingHorizontal: 6,
+    },
+    barGhost: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'transparent', borderTopColor: 'transparent' },
+    tab: { flex: 1, alignItems: 'center', gap: 3, paddingVertical: 4 },
+    tabLbl: { fontSize: 11, fontWeight: '600' },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    fab: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: C.lime },
+    backdrop: { flex: 1, backgroundColor: C.overlay },
+    menu: { position: 'absolute', left: 16, right: 16, backgroundColor: C.card, borderRadius: 22, borderWidth: 1, borderColor: C.line, overflow: 'hidden' },
+    menuTitle: { color: C.sub, fontSize: 13, fontWeight: '600', paddingHorizontal: 18, paddingTop: 16, paddingBottom: 6 },
+    action: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14 },
+    actionSep: { borderTopWidth: 1, borderTopColor: C.line },
+    actionIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: C.accentSoft },
+    actionTitle: { color: C.text, fontSize: 16, fontWeight: '600' },
+    actionSub: { color: C.sub, fontSize: 13, marginTop: 1 },
+  }),
+);
